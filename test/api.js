@@ -1,20 +1,27 @@
-let chai = require('chai');
-let chaiHttp = require('chai-http');
-// let should = chai.should();
-let { expect } = chai;
-
-const config = require(__dirname + '/../config/test.json');
-const root = config.ROOT;
-const port = config.PORT;
-
 process.env.NODE_ENV = 'test';
+const dotenv = require('dotenv')
+dotenv.config({
+    path: __dirname + '/../config/.env'
+});
+dotenv.config({
+    path: __dirname + `/../config/.env.${process.env.NODE_ENV}`,
+    override: true
+
+});
+const root = process.env.ROOT;
+const port = process.env.PORT;
+
+const path = require('node:path');
+const chai = require('chai');
+const chaiHttp = require('chai-http');
+const { expect } = chai;
 
 chai.use(chaiHttp);
 
 describe('test melbdata', () => {
 
     before((done) => {
-        const server = require(root + '/index.js');
+        const server = require(path.join(root, 'index.js'));
         done();
     });
     
@@ -51,8 +58,8 @@ describe('test melbdata', () => {
                         expect(res.body.features).to.be.an('array').that.includes(feature)
                     })
                     done();
-            });
+                });
         });
-
+ 
     });
 });

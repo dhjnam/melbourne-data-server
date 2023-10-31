@@ -1,11 +1,16 @@
-// require('dotenv').config();
-const config = process.env.NODE_ENV === 'dev' ? require(__dirname + '/config/dev.json')
-    : process.env.NODE_ENV === 'test' ? require(__dirname + '/config/test.json')
-    : process.env.NODE_ENV === 'debug' ? require(__dirname + '/config/debug.json')
-    : require(__dirname + '/config/default.json')
-
-const root = config.ROOT
-const port = config.PORT
+const dotenv = require('dotenv')
+dotenv.config({
+    path: __dirname + '/config/.env'
+});
+if (process.env.NODE_ENV) {
+    dotenv.config({
+        path: __dirname + `/config/.env.${process.env.NODE_ENV}`,
+        override: true
+    })
+}
+const port = process.env.PORT
+const root = process.env.ROOT
+const data_dir = process.env.DATA_DIR
 
 const express = require('express');
 const CSVtoJSON = require('csvtojson');
@@ -21,7 +26,7 @@ app.get('/melbdata', async (req, res) => {
     const melbdata = await CSVtoJSON({
         noheader: true,
         output: "csv",
-    }).fromFile(root + '/data/melb_data_orig.csv')
+    }).fromFile(path.join(root, data_dir, 'melb_data_orig.csv'))
     res.json({
         features: melbdata[0],
         data: melbdata.slice(1, melbdata.length)
