@@ -12,34 +12,47 @@ const port = process.env.PORT
 const root = process.env.ROOT
 const data_dir = process.env.DATA_DIR
 
-const express = require('express');
-const CSVtoJSON = require('csvtojson');
-const csvParser = require('csv-parse');
-const bodyParser = require('body-parser');
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const express = require('express');
+const CSVtoJSON = require('csvtojson');
+const GeoJSON = require('geojson');
+const csvParser = require('csv-parse');
+const bodyParser = require('body-parser');
 const hdf5 = require('jsfive');
+
+const path_to_melbdata = path.join(root, data_dir, 'melb_data_orig.csv')
+const path_to_geojson = path.join(root, data_dir, 'prepared/melbourne_sa.geojson')
 
 const app = express();
 
-app.get('/melbdata', async (req, res) => {
-    const melbdata = await CSVtoJSON({
+const loadData = [
+    CSVtoJSON({
         noheader: true,
         output: "csv",
-    }).fromFile(path.join(root, data_dir, 'melb_data_orig.csv'))
-    res.json({
-        features: melbdata[0],
-        data: melbdata.slice(1, melbdata.length)
-    })
-});
+    }).fromFile(path_to_melbdata),
+    fs.readFile(path_to_geojson)
+]
 
-app.get('/shape', (req, res) => {
-    res.end();
-});
+Promise.all(loadData).then((data) => {
+    [melbdata, geojson] = data;
+    app.get('/melbdata', (_, res) => {
+        res.json({
+            features: melbdata[0],
+            data: melbdata.slice(1, melbdata.length)
+        })
+    });
+    
+    app.get('/geojson', (_, res) => {
+        res.json(JSON.parse(geojson))
+        res.end();
+    });
 
-server = app.listen(port, () => console.log(`Server listening on port ${port}`));
 
- // for testing
-if ( process.env.NODE_ENV === 'test' ) {
-    module.exports = server;
-}
+    server = app.listen(port, () => console.log(`Server listening on port ${port}`));
+
+    // for testing
+    if ( process.env.NODE_ENV === 'test' ) {
+        module.exports = server;
+    }
+})
