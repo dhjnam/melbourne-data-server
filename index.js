@@ -15,6 +15,7 @@ const data_dir = process.env.DATA_DIR
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const express = require('express');
+const cors = require('cors');
 const CSVtoJSON = require('csvtojson');
 const GeoJSON = require('geojson');
 const csvParser = require('csv-parse');
@@ -24,7 +25,15 @@ const hdf5 = require('jsfive');
 const path_to_melbdata = path.join(root, data_dir, 'melb_data_orig.csv')
 const path_to_geojson = path.join(root, data_dir, 'prepared/melbourne_sa.geojson')
 
+const trustedOrigins = [
+    new RegExp(/http:\/\/localhost(:[1-9]\d{0,4})?/),
+    new RegExp(/http:\/\/127\.0\.0\.1(:[1-9]\d{0,4})?/)
+]
+
 const app = express();
+app.use(cors({
+    origin: trustedOrigins
+}));
 
 const loadData = [
     CSVtoJSON({
@@ -36,7 +45,7 @@ const loadData = [
 
 Promise.all(loadData).then((data) => {
     [melbdata, geojson] = data;
-    app.get('/melbdata', (_, res) => {
+    app.get('/melbdata', (req, res) => {
         res.json({
             features: melbdata[0],
             data: melbdata.slice(1, melbdata.length)
