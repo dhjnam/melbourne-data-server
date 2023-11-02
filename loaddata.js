@@ -16,6 +16,11 @@ module.exports = {
     melbdata: CSVtoJSON({
         noheader: true,
         output: "csv",
-    }).fromFile(path_to_melbdata),
+    }).fromFile(path_to_melbdata).then(data => {
+        return {
+            features: data[0],
+            data: data.slice(1, data.length)
+        }
+    }),
     geojson: fs.readFile(path_to_geojson)
 }

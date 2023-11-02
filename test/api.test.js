@@ -36,6 +36,6 @@ describe('test api', async function() {
         done();
     });
 
-    describe('/GET melbdata', testMelbdata);
-    describe('/GET geojson', testGeojson);
+    describe('melbdata', testMelbdata);
+    describe('geojson', testGeojson);
 });
